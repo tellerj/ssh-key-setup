@@ -13,25 +13,6 @@ function Test-SSHAgentRunning {
 $isAdmin = Test-Administrator
 $isSSHAgentRunning = Test-SSHAgentRunning
 
-
-# if ($isSSHAgentRunning) {
-#     continue
-# } else {
-#     if ($isAdmin) {
-#         Write-Host "Starting ssh-agent service..."
-#         Set-Service -Name ssh-agent -StartupType Automatic
-#         Start-Service ssh-agent
-#     } else {
-#         $proceed = Read-Host "The ssh-agent service is not running, and the script cannot start it without admin privs. Proceed anyways? (Y/n)"
-#         if ($proceed -eq 'n') {
-#             Write-Host "Exiting script. Please rerun as an administrator if you want the SSH agent to manage your new key."
-#             exit 1
-#         } else {
-#             Write-Host "Proceeding without ssh-agent support."
-#         }
-#     }
-# }
-
 if (-not $isSSHAgentRunning) {
     # If the SSH agent is not running, check for Administrator privileges
     $isAdmin = Test-Administrator

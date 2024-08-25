@@ -92,13 +92,13 @@ if (-not (Test-Path $configFilePath)) {
     $configContent | Out-File -FilePath $configFilePath -Encoding utf8
 } else {
     # Check if the specific configuration block is already in the config file
-    $existingConfig = Get-Content -Path $configFilePath
-    if ($existingConfig -notcontains $configContent.Trim()) {
+    $existingConfig = Get-Content -Path $configFilePath -Raw
+    if ($existingConfig.Contains($configContent)) {
+        Write-Host "GitHub configuration already exists in SSH config file."
+    } else {
         # Append the configuration to the existing config file
         Write-Host "Appending GitHub configuration to existing SSH config file..."
         Add-Content -Path $configFilePath -Value $configContent
-    } else {
-        Write-Host "GitHub configuration already exists in SSH config file."
     }
 }
 
@@ -112,4 +112,4 @@ $public_key | clip
 Write-Host "`nThe public key has been copied to the clipboard."
 
 # Display instructions for adding the key to your Git platform
-Write-Host "`nInstructions: Please add the following SSH key to your Git platform (e.g., GitHub, GitLab) under your SSH keys settings."
+Write-Host "`nInstructions: Please add the SSH key to your Git platform (e.g., GitHub, GitLab) under your SSH keys settings."

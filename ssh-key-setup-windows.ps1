@@ -9,8 +9,7 @@ function Test-SSHAgentRunning {
     return (Get-Service ssh-agent -ErrorAction SilentlyContinue).Status -eq 'Running'
 }
 
-# Check for Administrator privileges
-$isAdmin = Test-Administrator
+# Check if the ssh-agent service is running
 $isSSHAgentRunning = Test-SSHAgentRunning
 
 if (-not $isSSHAgentRunning) {
@@ -28,6 +27,8 @@ if (-not $isSSHAgentRunning) {
         Write-Host "Starting the SSH agent..."
         Start-Service ssh-agent
     }
+} else {
+    Write-Host "SSH agent is already running."
 }
 
 # Get the current user's username
@@ -60,11 +61,45 @@ Write-Host "Generating a new SSH key pair at: $keypath with comment: $comment"
 ssh-keygen -t rsa -b 4096 -C $comment -f $keypath
 
 if ($isSSHAgentRunning) {
-    # Add the new SSH key to the agent
-    Write-Host "Adding the new SSH key to the ssh-agent..."
+    # Add the new SSH key to the agent if it's running
+    Write-Host "Adding the new SSH key to the SSH agent..."
     ssh-add $keypath
 } else {
     Write-Host "Skipping SSH key addition to the agent because the SSH agent is not running."
+}
+
+# Ensure the .ssh directory exists
+$sshDir = "$HOME\.ssh"
+if (-not (Test-Path $sshDir)) {
+    New-Item -Path $sshDir -ItemType Directory
+}
+
+# Path to the SSH config file
+$configFilePath = "$sshDir\config"
+
+# Configuration block to add to the config file
+$configContent = @"
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile $keypath
+"@
+
+# Check if the config file exists
+if (-not (Test-Path $configFilePath)) {
+    # Create the config file and add the content
+    Write-Host "Creating SSH config file and adding GitHub configuration..."
+    $configContent | Out-File -FilePath $configFilePath -Encoding utf8
+} else {
+    # Check if the specific configuration block is already in the config file
+    $existingConfig = Get-Content -Path $configFilePath
+    if ($existingConfig -notcontains $configContent.Trim()) {
+        # Append the configuration to the existing config file
+        Write-Host "Appending GitHub configuration to existing SSH config file..."
+        Add-Content -Path $configFilePath -Value $configContent
+    } else {
+        Write-Host "GitHub configuration already exists in SSH config file."
+    }
 }
 
 # Show the public key that was generated
